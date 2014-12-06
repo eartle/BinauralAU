@@ -2,27 +2,24 @@
 // Michael Coffey 2005
 //
 
-#ifndef _FIR_
-#define _FIR_
+#pragma once
 
 #include "hrtf.h"
 
-class Fir
-	{
+class Fir {
 public:
-
-	enum Source
-		{
+	enum Source	{
 		Left = 0,
 		Right = 1,
 		Both = 2,
-		};
+	};
 
-	enum Ear 
-		{
+	enum Ear {
 		LeftEar = 0,
 		RightEar = 1,
-		};
+	};
+
+public:
 
 	Fir();
 	~Fir();
@@ -57,6 +54,4 @@ private:
 
 	Source iSource;
 public:
-	};
-
-#endif // _FIR_
+};

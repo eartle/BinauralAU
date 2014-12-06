@@ -2,15 +2,13 @@
 // Michael Coffey
 //
 
-#ifndef _BINAURAL_
-#define _BINAURAL_
+#pragma once
 
 #include <audioeffectx.h>
 
 #include "fir.h"
 
-class Binaural : public AudioEffectX
-	{
+class Binaural : public AudioEffectX {
 public:
 	Binaural(audioMasterCallback audioMaster);
 	~Binaural();
@@ -40,6 +38,4 @@ public:
 protected:
 	Fir iFir;
 	char iProgramName[32];
-	};
-
-#endif // _BINAURAL_
+};
