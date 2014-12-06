@@ -1,10 +1,10 @@
-file(GLOB_RECURSE core_audio_SRC
+file(GLOB_RECURSE CORE_AUDIO_SRC
     "*.h"
     "*.cpp"
 )
 
 ADD_LIBRARY(core_audio STATIC
-    ${core_audio_SRC}
+    ${CORE_AUDIO_SRC}
 )
 
 IF (APPLE)    
@@ -17,7 +17,7 @@ IF (APPLE)
     )
 ENDIF (APPLE)
 
-INCLUDE_DIRECTORIES(. ${CMAKE_CURRENT_SOURCE_DIR}
+INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/OtherBases
     ${CMAKE_CURRENT_SOURCE_DIR}/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/AUBase
     ${CMAKE_CURRENT_SOURCE_DIR}/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/Utility

@@ -35,23 +35,15 @@ public:
 	float Angle() const;
 	void SetAngle(float aAngle);
 
-
 private:
 	float Output(Ear aEar) const;
 
-	void MoveAngle();
-	void MoveHeight();
-
 private:
-	float* iPastInputs[LENGTH];
-	const float* iHRTFs[14];
+	float mPastInputs[LENGTH];
+	const float* mHRTFs[14];
 
-	float iCurrentHeight;
-	float iNewHeight;
+	float mHeight;
+	float mAngle;
 
-	float iCurrentAngle;
-	float iNewAngle;
-
-	Source iSource;
-public:
+	Source mSource;
 };

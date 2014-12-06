@@ -1,8 +1,6 @@
 ADD_LIBRARY(binaural MODULE
     Binaural.cpp
     Binaural.h
-    Binaural.hpp
-    Binaural.r
     Binaural.exp
     BinauralVersion.h
     Fir.cpp
@@ -23,7 +21,8 @@ IF (APPLE)
 
     SET_TARGET_PROPERTIES(binaural PROPERTIES
         BUNDLE true
-        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
+        BUNDLE_EXTENSION "component"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
     )
 
 ENDIF (APPLE)
@@ -31,12 +30,12 @@ ENDIF (APPLE)
 TARGET_LINK_LIBRARIES(binaural core_audio)
 
 INCLUDE_DIRECTORIES(. ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../CoreAudio/AudioUnits/AUPublic/OtherBases
-    ${CMAKE_CURRENT_SOURCE_DIR}/../CoreAudio/AudioUnits/AUPublic/AUBase
-    ${CMAKE_CURRENT_SOURCE_DIR}/../CoreAudio/AudioUnits/AUPublic/Utility
-    ${CMAKE_CURRENT_SOURCE_DIR}/../CoreAudio/PublicUtility
+    "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/OtherBases"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/AUBase"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/Utility"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/PublicUtility"
 )
 
 INSTALL(TARGETS binaural
-    DESTINATION $ENV{HOME}/Library/Audio/Plug-Ins/Components
+    DESTINATION "$ENV{HOME}/Library/Audio/Plug-Ins/Components"
 )

@@ -2,10 +2,31 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AudioComponents</key>
+	<array>
+		<dict>
+			<key>manufacturer</key>
+			<string>Coff</string>
+			<key>subtype</key>
+			<string>Bina</string>
+			<key>type</key>
+			<string>aufx</string>
+			<key>description</key>
+			<string>Binaural</string>
+			<key>name</key>
+			<string>Binaural</string>
+			<key>version</key>
+			<integer>65536</integer>
+			<key>factoryFunction</key>
+			<string>BinauralFactory</string>
+			<key>sandboxSafe</key>
+			<true/>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Binaural</string>
+	<string>binaural</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -14,12 +35,12 @@
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.1</string>
 	<key>CFBundleSignature</key>
-	<string>Coff</string>
+	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.1</string>
+	<string>1.2</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 </dict>

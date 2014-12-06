@@ -2,7 +2,6 @@
 #pragma once
 
 #include <AUEffectBase.h>
-#include <AUBase.h>
 
 #include "BinauralVersion.h"
 #include "Fir.h"
@@ -12,19 +11,19 @@
 #endif
 
 // parameters
-static const float kDefaultValue_ParamOne = 0;
-static const float kDefaultValue_ParamTwo = 0;
+static const float ParamAngleDefaultValue = 0;
+static const float ParamHeightDefaultValue = 0;
 
-static CFStringRef kParameterOneName = CFSTR("Angle");
-static CFStringRef kParameterTwoName = CFSTR("Height");
+static CFStringRef ParamAngleName = CFSTR("Angle");
+static CFStringRef ParamHeightName = CFSTR("Height");
 
 enum {
-	kParam_One,
-	kParam_Two,
-	kNumberOfParameters
+	PARAM_ANGLE,
+	PARAM_HEIGHT,
+	PARAM_COUNT
 };
 
-class Binaural : public AUBase {
+class Binaural : public AUEffectBase {
 public:
 	Binaural(AudioUnit component);
 	~Binaural();
@@ -37,8 +36,6 @@ public:
 	bool StreamFormatWritable(AudioUnitScope scope, AudioUnitElement element);
 											
 	UInt32 SupportedNumChannels(const AUChannelInfo** outInfo);
-	
-    bool CanScheduleParameters() const;
     
  	bool SupportsTail();
 
@@ -47,5 +44,5 @@ public:
 	OSStatus ProcessBufferLists(AudioUnitRenderActionFlags& iFlags, const AudioBufferList& inBufferList, AudioBufferList& outBufferList, UInt32 iFrames);
 	
 private:
-	Fir* iFirFilter;
+	Fir mFirFilter;
 };
