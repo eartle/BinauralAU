@@ -11,12 +11,13 @@ static CFStringRef ParamElevationName = CFSTR("Elevation");
 AUDIOCOMPONENT_ENTRY(AUBaseProcessFactory, Binaural)
 
 Binaural::Binaural(AudioUnit component)
-    :AUEffectBase(component)
+    :AUEffectBase(component),
+        mFirFilter(Fir::ChannelLeft)
 {
     CreateElements();
     Globals()->UseIndexedParameters(PARAM_COUNT);
-    SetParameter(PARAM_ANGLE, kAudioUnitScope_Global, 0, ParamAngleDefaultValue, 0);
-    SetParameter(PARAM_ELEVATION, kAudioUnitScope_Global, 0, ParamElevationDefaultValue, 0);
+    SetParameter(PARAM_ANGLE, ParamAngleDefaultValue);
+    SetParameter(PARAM_ELEVATION, ParamElevationDefaultValue);
         
 #if AU_DEBUG_DISPATCHER
     mDebugDispatcher = new AUDebugDispatcher(this);
@@ -55,16 +56,16 @@ ComponentResult Binaural::GetParameterInfo(AudioUnitScope inScope, AudioUnitPara
         {
             case PARAM_ANGLE:
                 AUBase::FillInParameterName (outParameterInfo, ParamAngleName, false);
-                outParameterInfo.unit = kAudioUnitParameterUnit_LinearGain;
+                outParameterInfo.unit = kAudioUnitParameterUnit_Degrees;
                 outParameterInfo.minValue = 0;
-                outParameterInfo.maxValue = 1;
+                outParameterInfo.maxValue = 360;
                 outParameterInfo.defaultValue = ParamAngleDefaultValue;
                 break;
             case PARAM_ELEVATION:
                 AUBase::FillInParameterName (outParameterInfo, ParamElevationName, false);
-                outParameterInfo.unit = kAudioUnitParameterUnit_LinearGain;
-                outParameterInfo.minValue = 0;
-                outParameterInfo.maxValue = 1;
+                outParameterInfo.unit = kAudioUnitParameterUnit_Degrees;
+                outParameterInfo.minValue = -40;
+                outParameterInfo.maxValue = 90;
                 outParameterInfo.defaultValue = ParamElevationDefaultValue;
                 break;
             default:

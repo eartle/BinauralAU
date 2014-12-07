@@ -5,10 +5,10 @@
 #pragma once
 
 #include <boost/container/vector.hpp>
+#include <boost/container/deque.hpp>
 
-#define LENGTH 128
 static const float ParamAngleDefaultValue = 0.0f;
-static const float ParamElevationDefaultValue = 0.3f;
+static const float ParamElevationDefaultValue = 0.0f;
 
 class Fir {
 public:
@@ -19,8 +19,7 @@ public:
 	};
 
 public:
-	Fir();
-	~Fir();
+	Fir(Channel inputChannel);
 
 	void putNextInput(const float aInputLeft, const float aInputRight);
 
@@ -33,11 +32,16 @@ public:
 	void setAngle(float angle);
 
 private:
-    void readFile(const std::string& fname, boost::container::vector<float>& list, bool left);
+    void readFile(const std::string& fname, boost::container::vector<float>& list);
+    
+    int getAngleIndex() const;
+    int getElevationIndex() const;
+    
+    int elevationFidelity(int height) const;
 
 private:
-	float mPastInputs[LENGTH];
-	boost::container::vector<float> mHRTFs[14];
+	boost::container::deque<float> mPastInputs;
+	boost::container::vector<boost::container::vector<float> > mHRTFs[14];
 
 	float mElevation;
 	float mAngle;

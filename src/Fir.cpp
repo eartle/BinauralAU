@@ -1,5 +1,6 @@
 
 #include <string>
+#include <math.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -11,124 +12,116 @@
 #include "Fir.h"
 #include "Utils.h"
 
-int elevationFidelity(int height) {
-    if ((height >= 2)&&(height <= 6))
-        return 37;
-    else if	((height == 1)||(height == 7))
-        return 31;
-    else if	((height == 0)||(height == 8))
-        return 29;
-    else if	(height == 9)
-        return 23;
-    else if	(height == 10)
-        return 19;
-    else if	(height == 11)
-        return 13;
-    else if	(height == 12)
-        return 7;
-    else if	(height == 13)
-        return 1;
-    
-    return 0;
-}
+#define PAST_INPUT_MAX_SIZE 256
 
-void Fir::readFile(const std::string& fname, boost::container::vector<float>& list, bool left) {
+void Fir::readFile(const std::string& fname, boost::container::vector<float>& list) {
     SndfileHandle file(fname);
     sf_count_t count = file.channels() * file.frames();
-    //Utils::getLogger() << fname << ": " << file.frames() << std::endl;
+    Utils::getLogger() << fname << ": " << file.frames() << std::endl;
     float* buffer = new float[count];
     sf_count_t actual_count = file.read(buffer, count);
-    for (int i = left ? 0 : 1 ; i < actual_count ; i += 2) {
+    for (int i = 0 ; i < actual_count ; ++i) {
         list.push_back(buffer[i]);
     }
     delete[] buffer;
 }
 
-Fir::Fir()
+Fir::Fir(Channel inputChannel)
     :mElevation(ParamElevationDefaultValue),
         mAngle(ParamAngleDefaultValue),
-        mInputChannel(ChannelMix)
+        mInputChannel(inputChannel)
 {
     std::string path = Utils::getResourcePath();
     Utils::getLogger() << path << std::endl;
     std::string filename_format = "/H%de%03da.wav";
     
-    for (int elev_i = 0 ; elev_i < 14 ; ++elev_i) {
-        int elev = (elev_i - 4) * 10;
-        
-        //mLog << "elevation left: " << elev << std::endl;
+    for (int elev_index = 0 ; elev_index < 14 ; ++elev_index) {
+        int elevation = (elev_index - 4) * 10;
         
         for (int angle = 0 ; angle <= 180 ; ++angle) {
-            std::string filename = path + (boost::format(filename_format) % elev % angle).str();
-            if (boost::filesystem::exists(filename))
-                readFile(filename, mHRTFs[elev_i], true);
+            // try finding a file for every angle
+            std::string filename = path + (boost::format(filename_format) % elevation % angle).str();
+            if (boost::filesystem::exists(filename)) {
+                boost::container::vector<float> angle_samples;
+                readFile(filename, angle_samples);
+                mHRTFs[elev_index].push_back(angle_samples);
+            }
         }
         
-        //mLog << "elevation right: " << elev << std::endl;
-        
-        for (int angle = 0 ; angle <= 180 ; ++angle) {
-            std::string filename = path + (boost::format(filename_format) % elev % angle).str();
-            if (boost::filesystem::exists(filename))
-                readFile(filename, mHRTFs[elev_i], false);
-        }
+        Utils::getLogger() << boost::format("elev: %1% size: %2%.") % elev_index % mHRTFs[elev_index].size() << std::endl;
     }
 }
 
-Fir::~Fir() {}
-
 float Fir::getOutput(Channel channel) const {
-	int impulseResponse = 0;
-    int height = static_cast<int>(boost::math::round(mElevation * 13));
-	int fidelity = elevationFidelity(height);
-	float coeff = 1;
-
-	if (mAngle < 0.5) {
-		float angle((mAngle * 2) * (static_cast<float>(fidelity) - 1));
-		impulseResponse = static_cast<int>(boost::math::round(angle));
-		coeff = angle - impulseResponse;
-	} else {
-		float angle(static_cast<float>((static_cast<float>(fidelity) - 1) - (((mAngle - 0.5) * 2) * (static_cast<float>(fidelity) - 1))));
-		impulseResponse = static_cast<int>(boost::math::round(angle));
-		coeff = angle - impulseResponse;
-
-        // we're over 180º so swap the channel
-		if (channel == ChannelLeft)
-            channel = ChannelRight;
-		else if (channel == ChannelRight)
-            channel = ChannelLeft;
-	}
-
-	float output = 0;
+    float output = 0;
     
-	for (int i(0); i < LENGTH; ++i)	{
-		output += mPastInputs[i]
-			* ((1-coeff) * mHRTFs[height][(channel *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]
-			+  ( coeff ) * mHRTFs[height][(channel *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]);
-	}
-
+    if (mAngle > 180) {
+        // we're over 180º so swap the channels
+        if (channel == ChannelLeft)
+            channel = ChannelRight;
+        else if (channel == ChannelRight)
+            channel = ChannelLeft;
+    }
+    
+    const boost::container::vector<float>& hrtf = mHRTFs[getElevationIndex()][getAngleIndex()];
+    
+    {
+        static int lastAngleIndex = 0;
+        static int lastElevationIndex = 0;
+        
+        if ((getAngleIndex() != lastAngleIndex)
+            || (lastElevationIndex != getElevationIndex())) {
+            lastAngleIndex = getAngleIndex();
+            lastAngleIndex = getElevationIndex();
+            
+            Utils::getLogger() << boost::format("getOutput elev: %1% angle: %2% %3% %4%.") % getElevationIndex() % getAngleIndex() % hrtf.size() % mPastInputs.size() << std::endl;
+        }
+    }
+    
+    // The science bit: a discrete convolution
+    // the output is the
+    for (int i = 0 ; (i < (hrtf.size() / 2)) && (i < mPastInputs.size()) ; ++i) {
+        // the samples are interleaved (left is every other starting at 0)
+        //                             (right is every other starting at 1)
+        output += mPastInputs[i] * hrtf[((channel == ChannelLeft) ? i : i + 1) * 2];
+    }
+    
 	return output;
 }
 
 void Fir::putNextInput(const float left, const float right) {
-	for (int i(LENGTH-1); i > 0; --i){
-		mPastInputs[i] = mPastInputs[i-1];
-	}
-    
     if (mInputChannel == ChannelMix) {
-        mPastInputs[0] = (left + right) / 2;
+        mPastInputs.push_front((left + right) / 2);
     } else if (mInputChannel == ChannelLeft) {
-        mPastInputs[0] = left;
+        mPastInputs.push_front(left);
     } else if (mInputChannel == ChannelRight) {
-        mPastInputs[0] = right;
+        mPastInputs.push_front(right);
     }
+    
+    if (mPastInputs.size() > PAST_INPUT_MAX_SIZE)
+        mPastInputs.pop_back();
 }
 
 float Fir::getElevation() const {
 	return mElevation;
 }
 
+int Fir::getElevationIndex() const {
+    // elevation goes from -40º to 90º
+    //                      0   to 13
+    return boost::math::round((getElevation() + 40.0f) / 10.0f);
+}
+
 float Fir::getAngle() const {
 	return mAngle;
+}
+
+int Fir::getAngleIndex() const {
+    // angle goes from 0º to 360º
+    float angle = fmod(getAngle(), 180.0f);
+    // angle goes from 0º to 180º
+    //                 0  to elevationFidelity(int elevation)
+    return boost::math::round((mHRTFs[getElevationIndex()].size() - 1) * (angle / 180.0f));
 }
 
 void Fir::setElevation(float elevation) {
