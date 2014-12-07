@@ -31,7 +31,7 @@ Fir::Fir(Channel inputChannel)
         mAngle(ParamAngleDefaultValue),
         mInputChannel(inputChannel)
 {
-    std::string path = Utils::getResourcePath();
+    std::string path = Utils::getResourcePath() + "/diffuse";
     Utils::getLogger() << path << std::endl;
     std::string filename_format = "/H%de%03da.wav";
     

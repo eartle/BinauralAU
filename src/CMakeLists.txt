@@ -1,4 +1,4 @@
-file(GLOB_RECURSE WAV_FILES "../res/*.wav")
+file(GLOB_RECURSE DIFFUSE_WAV_FILES "../res/diffuse/*.wav")
 
 ADD_LIBRARY(binaural MODULE
     Binaural.cpp
@@ -8,7 +8,7 @@ ADD_LIBRARY(binaural MODULE
     Fir.h
     Utils.m
     Utils.h
-    ${WAV_FILES}
+    ${DIFFUSE_WAV_FILES}
 )
 
 SET_SOURCE_FILES_PROPERTIES(
@@ -39,9 +39,9 @@ IF (APPLE)
     )
 
     SET_SOURCE_FILES_PROPERTIES(
-        ${WAV_FILES}
+        ${DIFFUSE_WAV_FILES}
         PROPERTIES
-        MACOSX_PACKAGE_LOCATION Resources
+        MACOSX_PACKAGE_LOCATION "Resources/diffuse"
     )
 
 ENDIF (APPLE)
