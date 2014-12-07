@@ -78,8 +78,7 @@ ComponentResult Binaural::GetProperty(AudioUnitPropertyID inID, AudioUnitScope i
     return AUEffectBase::GetProperty(inID, inScope, inElement, outData);
 }
 
-UInt32 Binaural::SupportedNumChannels(const AUChannelInfo** outInfo)
-{   
+UInt32 Binaural::SupportedNumChannels(const AUChannelInfo** outInfo) {
     // set an array of arrays of different combinations of supported numbers of ins and outs
     static const AUChannelInfo sChannels[1] = {{ -1, 2}};   
     if (outInfo)
@@ -87,7 +86,7 @@ UInt32 Binaural::SupportedNumChannels(const AUChannelInfo** outInfo)
     return sizeof(sChannels) / sizeof(AUChannelInfo);
 }
 
-OSStatus Binaural::ProcessBufferLists(AudioUnitRenderActionFlags& ioActionFlags,
+OSStatus Binaural::ProcessBufferLists(AudioUnitRenderActionFlags& inActionFlags,
                                         const AudioBufferList& inBuffer,
                                         AudioBufferList& outBuffer,
                                         UInt32 inFrames) {

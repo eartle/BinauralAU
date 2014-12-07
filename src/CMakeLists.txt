@@ -1,3 +1,5 @@
+file(GLOB_RECURSE WAV_FILES "*.wav")
+
 ADD_LIBRARY(binaural MODULE
     Binaural.cpp
     Binaural.h
@@ -5,8 +7,10 @@ ADD_LIBRARY(binaural MODULE
     BinauralVersion.h
     Fir.cpp
     Fir.h
-    hrtf.h
+    ${WAV_FILES}
 )
+
+find_package(Libsndfile)
 
 IF (APPLE)    
     find_library(AUDIOUNIT_LIBRARY AudioUnit)
@@ -25,11 +29,27 @@ IF (APPLE)
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
     )
 
+    SET_SOURCE_FILES_PROPERTIES(
+        ${WAV_FILES}
+        PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources
+    )
+
 ENDIF (APPLE)
 
-TARGET_LINK_LIBRARIES(binaural core_audio)
+set(Boost_USE_STATIC_LIBS ON) 
+find_package(Boost COMPONENTS filesystem system container) 
 
-INCLUDE_DIRECTORIES(. ${CMAKE_CURRENT_SOURCE_DIR}
+TARGET_LINK_LIBRARIES(binaural
+    core_audio
+    ${LIBSNDFILE_LIBRARY}
+    ${Boost_LIBRARIES}
+)
+
+INCLUDE_DIRECTORIES(.
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${LIBSNDFILE_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
     "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/OtherBases"
     "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/AUBase"
     "${CMAKE_CURRENT_SOURCE_DIR}/../ext/CoreAudioUtilityClasses/CoreAudio/AudioUnits/AUPublic/Utility"

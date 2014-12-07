@@ -1,23 +1,78 @@
+
+#include <string>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/format.hpp>
+#include <boost/math/special_functions/round.hpp>
+
+#include <sndfile.hh>
+
 #include "Fir.h"
-#include "hrtf.h"
+
+int elevationFidelity(int height) {
+    if ((height >= 2)&&(height <= 6))
+        return 37;
+    else if	((height == 1)||(height == 7))
+        return 31;
+    else if	((height == 0)||(height == 8))
+        return 29;
+    else if	(height == 9)
+        return 23;
+    else if	(height == 10)
+        return 19;
+    else if	(height == 11)
+        return 13;
+    else if	(height == 12)
+        return 7;
+    else if	(height == 13)
+        return 1;
+    
+    return 0;
+}
+
+void Fir::read_file(const std::string& fname, boost::container::vector<float>& list, bool left) {
+    SndfileHandle file(fname);
+    sf_count_t count = file.channels() * file.frames();
+    //mLog << fname << ": " << file.frames() << std::endl;
+    float* buffer = new float[count];
+    sf_count_t actual_count = file.read(buffer, count);
+    for (int i = left ? 0 : 1 ; i < actual_count ; i += 2) {
+        list.push_back(buffer[i]);
+    }
+    delete[] buffer;
+}
 
 Fir::Fir()
-    :mSource(Left), mHeight(0), mAngle(0)
+    :mLog("/Users/coffey/Library/Logs/binaural.log", std::ios_base::trunc|std::ios_base::out),
+        mHeight(0),
+        mAngle(0),
+        mSource(Left)
 {
-	mHRTFs[0] = reinterpret_cast<const float*>(ImpResElev_40);
-	mHRTFs[1] = reinterpret_cast<const float*>(ImpResElev_30);
-	mHRTFs[2] = reinterpret_cast<const float*>(ImpResElev_20);
-	mHRTFs[3] = reinterpret_cast<const float*>(ImpResElev_10);
-	mHRTFs[4] = reinterpret_cast<const float*>(ImpResElev0);
-	mHRTFs[5] = reinterpret_cast<const float*>(ImpResElev10);
-	mHRTFs[6] = reinterpret_cast<const float*>(ImpResElev20);
-	mHRTFs[7] = reinterpret_cast<const float*>(ImpResElev30);
-	mHRTFs[8] = reinterpret_cast<const float*>(ImpResElev40);
-	mHRTFs[9] = reinterpret_cast<const float*>(ImpResElev50);
-	mHRTFs[10] = reinterpret_cast<const float*>(ImpResElev60);
-	mHRTFs[11] = reinterpret_cast<const float*>(ImpResElev70);
-	mHRTFs[12] = reinterpret_cast<const float*>(ImpResElev80);
-	mHRTFs[13] = reinterpret_cast<const float*>(ImpResElev90);
+    //std::string path = (boost::filesystem::current_path()).string() + "/../Resources/";
+    std::string path = "/Users/coffey/Library/Audio/Plug-Ins/Components/binaural.component/Contents/Resources/";
+    
+    std::string filename_format = "H%de%03da.wav";
+    
+    for (int elev_i = 0 ; elev_i < 14 ; ++elev_i) {
+        int elev = (elev_i - 4) * 10;
+        
+        //mLog << "elevation left: " << elev << std::endl;
+        
+        for (int angle = 0 ; angle <= 180 ; ++angle) {
+            std::string filename = path + (boost::format(filename_format) % elev % angle).str();
+            if (boost::filesystem::exists(filename))
+                read_file(filename, mHRTFs[elev_i], true);
+        }
+        
+        //mLog << "elevation right: " << elev << std::endl;
+        
+        for (int angle = 0 ; angle <= 180 ; ++angle) {
+            std::string filename = path + (boost::format(filename_format) % elev % angle).str();
+            if (boost::filesystem::exists(filename))
+                read_file(filename, mHRTFs[elev_i], false);
+        }
+    }
 }
 
 Fir::~Fir() {}
@@ -32,37 +87,31 @@ float Fir::RightOutput() const {
 
 float Fir::Output(Ear aEar) const {
 	int impulseResponse = 0;
-	int height = static_cast<int>(mHeight * 13);
-	int precision = 1;
+    int height = static_cast<int>(boost::math::round(mHeight * 13));
+	int fidelity = elevationFidelity(height);
 	float coeff = 1;
 
-	if		((height >= 2)&&(height <= 6))	precision = 37;
-	else if	((height == 1)||(height == 7))	precision = 31;
-	else if	((height == 0)||(height == 8))	precision = 29;
-	else if	(height == 9)					precision = 23;
-	else if	(height == 10)					precision = 19;
-	else if	(height == 11)					precision = 13;
-	else if	(height == 12)					precision = 7;
-	else if	(height == 13)					precision = 1;
-
 	if (mAngle < 0.5) {
-		float angle((mAngle * 2) * (static_cast<float>(precision) - 1));
-		impulseResponse = static_cast<int>(angle);
+		float angle((mAngle * 2) * (static_cast<float>(fidelity) - 1));
+		impulseResponse = static_cast<int>(boost::math::round(angle));
 		coeff = angle - impulseResponse;
 	} else {
-		float angle(static_cast<float>((static_cast<float>(precision) - 1) - (((mAngle - 0.5) * 2) * (static_cast<float>(precision) - 1))));
-		impulseResponse = static_cast<int>(angle);
+		float angle(static_cast<float>((static_cast<float>(fidelity) - 1) - (((mAngle - 0.5) * 2) * (static_cast<float>(fidelity) - 1))));
+		impulseResponse = static_cast<int>(boost::math::round(angle));
 		coeff = angle - impulseResponse;
 
-		if (aEar == LeftEar) aEar = RightEar;
-		else if (aEar == RightEar) aEar = LeftEar;
+		if (aEar == LeftEar)
+            aEar = RightEar;
+		else if (aEar == RightEar)
+            aEar = LeftEar;
 	}
 
 	float output = 0;
+    
 	for (int i(0); i < LENGTH; ++i)	{
 		output += mPastInputs[i]
-			* ((1-coeff) * mHRTFs[height][(aEar *  precision * LENGTH) + (LENGTH * impulseResponse) + i]
-			+  ( coeff ) * mHRTFs[height][(aEar *  precision * LENGTH) + (LENGTH * impulseResponse) + i]);
+			* ((1-coeff) * mHRTFs[height][(aEar *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]
+			+  ( coeff ) * mHRTFs[height][(aEar *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]);
 	}
 
 	return output;

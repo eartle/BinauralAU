@@ -12,7 +12,7 @@
 
 // parameters
 static const float ParamAngleDefaultValue = 0;
-static const float ParamHeightDefaultValue = 0;
+static const float ParamHeightDefaultValue = 0.3f;
 
 static CFStringRef ParamAngleName = CFSTR("Angle");
 static CFStringRef ParamHeightName = CFSTR("Height");

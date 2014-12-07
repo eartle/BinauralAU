@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 2.8.11)
 project (BINAURAL)
 
 SET(CMAKE_MODULE_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
+
+SET(CMAKE_MODULE_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 SET(CORE_AUDIO_UTILITY_CLASSES_URL "https://developer.apple.com/library/ios/samplecode/CoreAudioUtilityClasses/CoreAudioUtilityClasses.zip")
 SET(CORE_AUDIO_UTILITY_CLASSES_ZIP "${CMAKE_CURRENT_SOURCE_DIR}/ext/CoreAudioUtilityClasses.zip")
 
@@ -21,6 +23,11 @@ if(NOT EXISTS ${CORE_AUDIO_UTILITY_CLASSES_ZIP})
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ext"
     )
 endif()
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar x "${CMAKE_CURRENT_SOURCE_DIR}/res/diffuse.zip"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/res"
+)
 
 add_subdirectory(ext)
 add_subdirectory(src)
