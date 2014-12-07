@@ -72,7 +72,7 @@ float Fir::getOutput(Channel channel) const {
         if ((getAngleIndex() != lastAngleIndex)
             || (lastElevationIndex != getElevationIndex())) {
             lastAngleIndex = getAngleIndex();
-            lastAngleIndex = getElevationIndex();
+            lastElevationIndex = getElevationIndex();
             
             Utils::getLogger() << boost::format("getOutput elev: %1% angle: %2% %3% %4%.") % getElevationIndex() % getAngleIndex() % hrtf.size() % mPastInputs.size() << std::endl;
         }
@@ -118,7 +118,7 @@ float Fir::getAngle() const {
 
 int Fir::getAngleIndex() const {
     // getAngle() goes from 0º to 360º
-    float angle = (getAngle() > 180) ? 360.0f - getAngle() : getAngle();
+    float angle = (getAngle() > 180.0f) ? 360.0f - getAngle() : getAngle();
     // angle goes from 0º to 180º
     //                 0  to elevationFidelity(int elevation)
     return boost::math::round((mHRTFs[getElevationIndex()].size() - 1) * (angle / 180.0f));
