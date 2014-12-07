@@ -10,49 +10,47 @@
 #include "Fir.h"
 #include "Utils.h"
 #include "Diffuse.h"
+#include "HRTFDB.h"
 
-#define PAST_INPUT_MAX_SIZE 256
+#define PAST_INPUT_MAX_SIZE 4096
 
 Fir::Fir(Channel inputChannel)
     :mInputChannel(inputChannel),
+        mInputBuffer(PAST_INPUT_MAX_SIZE),
         mElevation(ParamElevationDefaultValue),
         mAngle(ParamAngleDefaultValue)
 {
-    mHRTF = new Diffuse();
+    //mHRTF = new Diffuse();
+    mHRTF = new HRTFDB("1002", "C");
 }
 
 Fir::~Fir() {
     delete mHRTF;
 }
 
-float Fir::getOutput(Channel channel) const {
-    float output = 0;
+void Fir::process(float inLeft, float inRight,
+                     float& outLeft, float& outRight) {
+    outLeft = 0;
+    outRight = 0;
+    
+    if (mInputChannel == ChannelMix) {
+        mInputBuffer.push_front((inLeft + inRight) / 2);
+    } else if (mInputChannel == ChannelLeft) {
+        mInputBuffer.push_front(inLeft);
+    } else if (mInputChannel == ChannelRight) {
+        mInputBuffer.push_front(inRight);
+    }
     
     bool swap;
     const boost::container::vector<float>& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
     
-    // The science bit: a discrete convolution
-    // the output is the
-    for (int i = 0 ; (i < (hrtf.size() / 2)) && (i < mPastInputs.size()) ; ++i) {
+    // The science bit: a discrete convolution the output is the
+    for (int i = 0 ; (i < (hrtf.size() / 2)) && (i < mInputBuffer.size()) ; ++i) {
         // the samples are interleaved (left is every other starting at 0)
         //                             (right is every other starting at 1)
-        output += mPastInputs[i] * hrtf[((channel == ChannelLeft) ? i : i + 1) * 2];
+        outLeft += mInputBuffer[i] * hrtf[i * 2];
+        outRight += mInputBuffer[i] * hrtf[(i + 1) * 2];
     }
-    
-	return output;
-}
-
-void Fir::putNextInput(const float left, const float right) {
-    if (mInputChannel == ChannelMix) {
-        mPastInputs.push_front((left + right) / 2);
-    } else if (mInputChannel == ChannelLeft) {
-        mPastInputs.push_front(left);
-    } else if (mInputChannel == ChannelRight) {
-        mPastInputs.push_front(right);
-    }
-    
-    if (mPastInputs.size() > PAST_INPUT_MAX_SIZE)
-        mPastInputs.pop_back();
 }
 
 float Fir::getElevation() const {

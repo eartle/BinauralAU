@@ -5,7 +5,7 @@
 #pragma once
 
 #include <boost/container/vector.hpp>
-#include <boost/container/deque.hpp>
+#include <boost/circular_buffer.hpp>
 
 static const float ParamAngleDefaultValue = 0.0f;
 static const float ParamElevationDefaultValue = 0.0f;
@@ -22,9 +22,8 @@ public:
 	Fir(Channel inputChannel);
     ~Fir();
 
-	void putNextInput(const float aInputLeft, const float aInputRight);
-
-    float getOutput(Channel aEar) const;
+    void process(float inLeft, float inRight,
+                    float& outLeft, float& outRight);
 
 	float getElevation() const;
 	void setElevation(float elevation);
@@ -33,16 +32,8 @@ public:
 	void setAngle(float angle);
 
 private:
-    void readFile(const std::string& fname, boost::container::vector<float>& list);
-    
-    int getAngleIndex() const;
-    int getElevationIndex() const;
-    
-    int elevationFidelity(int height) const;
-
-private:
     Channel mInputChannel;
-	boost::container::deque<float> mPastInputs;
+	boost::circular_buffer<float> mInputBuffer;
 
 	float mElevation;
 	float mAngle;

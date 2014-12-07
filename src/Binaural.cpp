@@ -12,7 +12,7 @@ AUDIOCOMPONENT_ENTRY(AUBaseProcessFactory, Binaural)
 
 Binaural::Binaural(AudioUnit component)
     :AUEffectBase(component),
-        mFirFilter(Fir::ChannelLeft)
+        mFirFilter(Fir::ChannelMix)
 {
     CreateElements();
     Globals()->UseIndexedParameters(PARAM_COUNT);
@@ -89,7 +89,7 @@ ComponentResult Binaural::GetProperty(AudioUnitPropertyID inID, AudioUnitScope i
 
 UInt32 Binaural::SupportedNumChannels(const AUChannelInfo** outInfo) {
     // set an array of arrays of different combinations of supported numbers of ins and outs
-    static const AUChannelInfo sChannels[1] = {{ -1, 2}};   
+    static const AUChannelInfo sChannels[1] = {{ 2, 2}};
     if (outInfo)
         *outInfo = sChannels;
     return sizeof(sChannels) / sizeof(AUChannelInfo);
@@ -102,18 +102,16 @@ OSStatus Binaural::ProcessBufferLists(AudioUnitRenderActionFlags& inActionFlags,
     mFirFilter.setAngle(Globals()->GetParameter(PARAM_ANGLE));
     mFirFilter.setElevation(Globals()->GetParameter(PARAM_ELEVATION));
     
-    const float* srcBuffer = (Float32 *)inBuffer.mBuffers[0].mData;
+    const Float32* srcBufferL = (Float32 *)inBuffer.mBuffers[0].mData;
+    const Float32* srcBufferR = (Float32 *)inBuffer.mBuffers[1].mData;
     
-    float* destBufferL = (Float32 *)outBuffer.mBuffers[0].mData;
-    float* destBufferR = (Float32 *)outBuffer.mBuffers[1].mData;
+    Float32* destBufferL = (Float32 *)outBuffer.mBuffers[0].mData;
+    Float32* destBufferR = (Float32 *)outBuffer.mBuffers[1].mData;
     
     for (int i = 0 ; i < inFrames ; ++i) {
-        // we are always using the first input channel no matter how many there are
-        mFirFilter.putNextInput(*(srcBuffer + i), *(srcBuffer + i));
-        
-        // here's where you do your DSP work
-        *(destBufferL + i) = mFirFilter.getOutput(Fir::ChannelLeft);
-        *(destBufferR + i) = mFirFilter.getOutput(Fir::ChannelRight);
+        mFirFilter.process(*(srcBufferL++), *(srcBufferR++),
+                           *(destBufferL++), *(destBufferR++));
+
     }
     
     return noErr; 
