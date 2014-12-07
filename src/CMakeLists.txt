@@ -7,6 +7,10 @@ ADD_LIBRARY(Binaural MODULE
     BinauralVersion.h
     Fir.cpp
     Fir.h
+    HRTF.cpp
+    HRTF.h
+    Diffuse.cpp
+    Diffuse.h
     Utils.m
     Utils.h
     ${DIFFUSE_WAV_FILES}

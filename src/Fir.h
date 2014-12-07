@@ -20,6 +20,7 @@ public:
 
 public:
 	Fir(Channel inputChannel);
+    ~Fir();
 
 	void putNextInput(const float aInputLeft, const float aInputRight);
 
@@ -40,11 +41,11 @@ private:
     int elevationFidelity(int height) const;
 
 private:
+    Channel mInputChannel;
 	boost::container::deque<float> mPastInputs;
-	boost::container::vector<boost::container::vector<float> > mHRTFs[14];
 
 	float mElevation;
 	float mAngle;
-
-	Channel mInputChannel;
+    
+    class HRTF* mHRTF;
 };
