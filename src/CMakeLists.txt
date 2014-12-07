@@ -42,7 +42,7 @@ find_package(Boost COMPONENTS filesystem system container)
 
 TARGET_LINK_LIBRARIES(binaural
     core_audio
-    ${LIBSNDFILE_LIBRARY}
+    ${LIBSNDFILE_LIBRARIES}
     ${Boost_LIBRARIES}
 )
 
