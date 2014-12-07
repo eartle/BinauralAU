@@ -117,8 +117,8 @@ float Fir::getAngle() const {
 }
 
 int Fir::getAngleIndex() const {
-    // angle goes from 0º to 360º
-    float angle = fmod(getAngle(), 180.0f);
+    // getAngle() goes from 0º to 360º
+    float angle = (getAngle() > 180) ? 360.0f - getAngle() : getAngle();
     // angle goes from 0º to 180º
     //                 0  to elevationFidelity(int elevation)
     return boost::math::round((mHRTFs[getElevationIndex()].size() - 1) * (angle / 180.0f));
