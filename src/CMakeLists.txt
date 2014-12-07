@@ -1,5 +1,6 @@
 file(GLOB_RECURSE DIFFUSE_WAV_FILES "../res/diffuse/*.wav")
-file(GLOB_RECURSE HRTF_DB_WAV_FILES "../res/RAW/WAV/*.wav")
+file(GLOB_RECURSE HRTF_DB_R_WAV_FILES "../res/RAW/WAV/*.wav")
+file(GLOB_RECURSE HRTF_DB_C_WAV_FILES "../res/COMPENSATED/WAV/*.wav")
 
 ADD_LIBRARY(Binaural MODULE
     Binaural.cpp
@@ -11,10 +12,13 @@ ADD_LIBRARY(Binaural MODULE
     HRTF.h
     Diffuse.cpp
     Diffuse.h
+    HRTFDB.cpp
+    HRTFDB.h
     Utils.m
     Utils.h
     ${DIFFUSE_WAV_FILES}
-    ${HRTF_DB_WAV_FILES}
+    ${HRTF_DB_R_WAV_FILES}
+    ${HRTF_DB_C_WAV_FILES}
 )
 
 SET_SOURCE_FILES_PROPERTIES(
@@ -51,10 +55,18 @@ IF (APPLE)
     )
 
     SET_SOURCE_FILES_PROPERTIES(
-        ${HRTF_DB_WAV_FILES}
+        ${HRTF_DB_R_WAV_FILES}
         PROPERTIES
         MACOSX_PACKAGE_LOCATION "Resources/hrtfdb"
     )
+
+    SET_SOURCE_FILES_PROPERTIES(
+        ${HRTF_DB_C_WAV_FILES}
+        PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources/hrtfdb"
+    )
+
+     
 ENDIF (APPLE)
 
 set(Boost_USE_STATIC_LIBS ON) 
