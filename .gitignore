@@ -1,4 +1,5 @@
 _*
-ext/CoreAudioUtilityClasses.zip
 ext/CoreAudioUtilityClasses/*
 *.wav
+*.mat
+*.zip
