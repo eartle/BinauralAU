@@ -29,5 +29,7 @@ execute_process(
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/res"
 )
 
+SET(CMAKE_CXX_FLAGS "-Wno-deprecated")
+
 add_subdirectory(ext)
 add_subdirectory(src)
