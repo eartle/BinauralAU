@@ -1,4 +1,4 @@
-file(GLOB_RECURSE WAV_FILES "*.wav")
+file(GLOB_RECURSE WAV_FILES "../res/*.wav")
 
 ADD_LIBRARY(binaural MODULE
     Binaural.cpp
