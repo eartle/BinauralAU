@@ -32,10 +32,10 @@ int elevationFidelity(int height) {
     return 0;
 }
 
-void Fir::read_file(const std::string& fname, boost::container::vector<float>& list, bool left) {
+void Fir::readFile(const std::string& fname, boost::container::vector<float>& list, bool left) {
     SndfileHandle file(fname);
     sf_count_t count = file.channels() * file.frames();
-    Utils::getLogger() << fname << ": " << file.frames() << std::endl;
+    //Utils::getLogger() << fname << ": " << file.frames() << std::endl;
     float* buffer = new float[count];
     sf_count_t actual_count = file.read(buffer, count);
     for (int i = left ? 0 : 1 ; i < actual_count ; i += 2) {
@@ -45,9 +45,9 @@ void Fir::read_file(const std::string& fname, boost::container::vector<float>& l
 }
 
 Fir::Fir()
-    :mHeight(0),
-        mAngle(0),
-        mSource(Left)
+    :mElevation(ParamElevationDefaultValue),
+        mAngle(ParamAngleDefaultValue),
+        mInputChannel(ChannelMix)
 {
     std::string path = Utils::getResourcePath();
     Utils::getLogger() << path << std::endl;
@@ -61,7 +61,7 @@ Fir::Fir()
         for (int angle = 0 ; angle <= 180 ; ++angle) {
             std::string filename = path + (boost::format(filename_format) % elev % angle).str();
             if (boost::filesystem::exists(filename))
-                read_file(filename, mHRTFs[elev_i], true);
+                readFile(filename, mHRTFs[elev_i], true);
         }
         
         //mLog << "elevation right: " << elev << std::endl;
@@ -69,24 +69,16 @@ Fir::Fir()
         for (int angle = 0 ; angle <= 180 ; ++angle) {
             std::string filename = path + (boost::format(filename_format) % elev % angle).str();
             if (boost::filesystem::exists(filename))
-                read_file(filename, mHRTFs[elev_i], false);
+                readFile(filename, mHRTFs[elev_i], false);
         }
     }
 }
 
 Fir::~Fir() {}
 
-float Fir::LeftOutput() const {
-    return Output(LeftEar);
-}
-
-float Fir::RightOutput() const {
-	return Output(RightEar);
-}
-
-float Fir::Output(Ear aEar) const {
+float Fir::getOutput(Channel channel) const {
 	int impulseResponse = 0;
-    int height = static_cast<int>(boost::math::round(mHeight * 13));
+    int height = static_cast<int>(boost::math::round(mElevation * 13));
 	int fidelity = elevationFidelity(height);
 	float coeff = 1;
 
@@ -99,49 +91,50 @@ float Fir::Output(Ear aEar) const {
 		impulseResponse = static_cast<int>(boost::math::round(angle));
 		coeff = angle - impulseResponse;
 
-		if (aEar == LeftEar)
-            aEar = RightEar;
-		else if (aEar == RightEar)
-            aEar = LeftEar;
+        // we're over 180º so swap the channel
+		if (channel == ChannelLeft)
+            channel = ChannelRight;
+		else if (channel == ChannelRight)
+            channel = ChannelLeft;
 	}
 
 	float output = 0;
     
 	for (int i(0); i < LENGTH; ++i)	{
 		output += mPastInputs[i]
-			* ((1-coeff) * mHRTFs[height][(aEar *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]
-			+  ( coeff ) * mHRTFs[height][(aEar *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]);
+			* ((1-coeff) * mHRTFs[height][(channel *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]
+			+  ( coeff ) * mHRTFs[height][(channel *  fidelity * LENGTH) + (LENGTH * impulseResponse) + i]);
 	}
 
 	return output;
 }
 
-void Fir::NextInput(const float aInputLeft, const float aInputRight) {
+void Fir::putNextInput(const float left, const float right) {
 	for (int i(LENGTH-1); i > 0; --i){
 		mPastInputs[i] = mPastInputs[i-1];
 	}
     
-    if (mSource == Both) {
-        mPastInputs[0] = (aInputLeft + aInputRight) / 2;
-    } else if (mSource == Left) {
-        mPastInputs[0] = aInputLeft;
-    } else if (mSource == Right) {
-        mPastInputs[0] = aInputRight;
+    if (mInputChannel == ChannelMix) {
+        mPastInputs[0] = (left + right) / 2;
+    } else if (mInputChannel == ChannelLeft) {
+        mPastInputs[0] = left;
+    } else if (mInputChannel == ChannelRight) {
+        mPastInputs[0] = right;
     }
 }
 
-float Fir::Height() const {
-	return mHeight;
+float Fir::getElevation() const {
+	return mElevation;
 }
 
-float Fir::Angle() const {
+float Fir::getAngle() const {
 	return mAngle;
 }
 
-void Fir::SetHeight(float height) {
-	mHeight = height;
+void Fir::setElevation(float elevation) {
+	mElevation = elevation;
 }
 
-void Fir::SetAngle(float angle) {
+void Fir::setAngle(float angle) {
 	mAngle = angle;
 }

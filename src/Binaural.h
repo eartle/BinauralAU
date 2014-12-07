@@ -6,20 +6,9 @@
 #include "BinauralVersion.h"
 #include "Fir.h"
 
-#if AU_DEBUG_DISPATCHER
-#include "AUDebugDispatcher.h"
-#endif
-
-// parameters
-static const float ParamAngleDefaultValue = 0;
-static const float ParamHeightDefaultValue = 0.3f;
-
-static CFStringRef ParamAngleName = CFSTR("Angle");
-static CFStringRef ParamHeightName = CFSTR("Height");
-
 enum {
 	PARAM_ANGLE,
-	PARAM_HEIGHT,
+	PARAM_ELEVATION,
 	PARAM_COUNT
 };
 

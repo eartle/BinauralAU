@@ -1,5 +1,13 @@
 #include "Binaural.h"
 
+#if AU_DEBUG_DISPATCHER
+#include "AUDebugDispatcher.h"
+#endif
+
+// parameters
+static CFStringRef ParamAngleName = CFSTR("Angle");
+static CFStringRef ParamElevationName = CFSTR("Elevation");
+
 AUDIOCOMPONENT_ENTRY(AUBaseProcessFactory, Binaural)
 
 Binaural::Binaural(AudioUnit component)
@@ -8,7 +16,7 @@ Binaural::Binaural(AudioUnit component)
     CreateElements();
     Globals()->UseIndexedParameters(PARAM_COUNT);
     SetParameter(PARAM_ANGLE, kAudioUnitScope_Global, 0, ParamAngleDefaultValue, 0);
-    SetParameter(PARAM_HEIGHT, kAudioUnitScope_Global, 0, ParamHeightDefaultValue, 0);
+    SetParameter(PARAM_ELEVATION, kAudioUnitScope_Global, 0, ParamElevationDefaultValue, 0);
         
 #if AU_DEBUG_DISPATCHER
     mDebugDispatcher = new AUDebugDispatcher(this);
@@ -52,12 +60,12 @@ ComponentResult Binaural::GetParameterInfo(AudioUnitScope inScope, AudioUnitPara
                 outParameterInfo.maxValue = 1;
                 outParameterInfo.defaultValue = ParamAngleDefaultValue;
                 break;
-            case PARAM_HEIGHT:
-                AUBase::FillInParameterName (outParameterInfo, ParamHeightName, false);
+            case PARAM_ELEVATION:
+                AUBase::FillInParameterName (outParameterInfo, ParamElevationName, false);
                 outParameterInfo.unit = kAudioUnitParameterUnit_LinearGain;
                 outParameterInfo.minValue = 0;
                 outParameterInfo.maxValue = 1;
-                outParameterInfo.defaultValue = ParamHeightDefaultValue;
+                outParameterInfo.defaultValue = ParamElevationDefaultValue;
                 break;
             default:
                 result = kAudioUnitErr_InvalidParameter;
@@ -90,8 +98,8 @@ OSStatus Binaural::ProcessBufferLists(AudioUnitRenderActionFlags& inActionFlags,
                                         const AudioBufferList& inBuffer,
                                         AudioBufferList& outBuffer,
                                         UInt32 inFrames) {
-    mFirFilter.SetAngle(Globals()->GetParameter(PARAM_ANGLE));
-    mFirFilter.SetHeight(Globals()->GetParameter(PARAM_HEIGHT));
+    mFirFilter.setAngle(Globals()->GetParameter(PARAM_ANGLE));
+    mFirFilter.setElevation(Globals()->GetParameter(PARAM_ELEVATION));
     
     const float* srcBuffer = (Float32 *)inBuffer.mBuffers[0].mData;
     
@@ -100,11 +108,11 @@ OSStatus Binaural::ProcessBufferLists(AudioUnitRenderActionFlags& inActionFlags,
     
     for (int i = 0 ; i < inFrames ; ++i) {
         // we are always using the first input channel no matter how many there are
-        mFirFilter.NextInput(*(srcBuffer + i), *(srcBuffer + i));
+        mFirFilter.putNextInput(*(srcBuffer + i), *(srcBuffer + i));
         
         // here's where you do your DSP work
-        *(destBufferL + i) = mFirFilter.LeftOutput();
-        *(destBufferR + i) = mFirFilter.RightOutput();
+        *(destBufferL + i) = mFirFilter.getOutput(Fir::ChannelLeft);
+        *(destBufferR + i) = mFirFilter.getOutput(Fir::ChannelRight);
     }
     
     return noErr; 
