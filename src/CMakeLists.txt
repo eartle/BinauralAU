@@ -3,7 +3,6 @@ file(GLOB_RECURSE WAV_FILES "*.wav")
 ADD_LIBRARY(binaural MODULE
     Binaural.cpp
     Binaural.h
-    Binaural.exp
     BinauralVersion.h
     Fir.cpp
     Fir.h
