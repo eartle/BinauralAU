@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <boost/filesystem/fstream.hpp>
 #include <boost/container/vector.hpp>
 
 #define LENGTH 128
@@ -40,12 +39,9 @@ public:
 
 private:
 	float Output(Ear aEar) const;
-    
     void read_file(const std::string& fname, boost::container::vector<float>& list, bool left);
 
 private:
-    boost::filesystem::fstream mLog;
-    
 	float mPastInputs[LENGTH];
 	boost::container::vector<float> mHRTFs[14];
 

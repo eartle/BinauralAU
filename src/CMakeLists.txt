@@ -7,19 +7,29 @@ ADD_LIBRARY(binaural MODULE
     BinauralVersion.h
     Fir.cpp
     Fir.h
+    Utils.m
+    Utils.h
     ${WAV_FILES}
+)
+
+SET_SOURCE_FILES_PROPERTIES(
+    Utils.m
+    PROPERTIES
+    COMPILE_FLAGS "-x objective-c++"
 )
 
 find_package(Libsndfile)
 
 IF (APPLE)    
-    find_library(AUDIOUNIT_LIBRARY AudioUnit)
+    FIND_LIBRARY(AUDIOUNIT_LIBRARY AudioUnit)
     FIND_LIBRARY(COREAUDIO_LIBRARY CoreAudio)
+    FIND_LIBRARY(FOUNDATION_LIBRARY Foundation)
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
 
     TARGET_LINK_LIBRARIES(binaural
         ${COREAUDIO_LIBRARY}
         ${COREFOUNDATION_LIBRARY}
+        ${FOUNDATION_LIBRARY}
         ${AUDIOUNIT_LIBRARY}
     )
 

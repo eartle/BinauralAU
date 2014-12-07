@@ -9,6 +9,7 @@
 #include <sndfile.hh>
 
 #include "Fir.h"
+#include "Utils.h"
 
 int elevationFidelity(int height) {
     if ((height >= 2)&&(height <= 6))
@@ -34,7 +35,7 @@ int elevationFidelity(int height) {
 void Fir::read_file(const std::string& fname, boost::container::vector<float>& list, bool left) {
     SndfileHandle file(fname);
     sf_count_t count = file.channels() * file.frames();
-    //mLog << fname << ": " << file.frames() << std::endl;
+    Utils::getLogger() << fname << ": " << file.frames() << std::endl;
     float* buffer = new float[count];
     sf_count_t actual_count = file.read(buffer, count);
     for (int i = left ? 0 : 1 ; i < actual_count ; i += 2) {
@@ -44,15 +45,13 @@ void Fir::read_file(const std::string& fname, boost::container::vector<float>& l
 }
 
 Fir::Fir()
-    :mLog("/Users/coffey/Library/Logs/binaural.log", std::ios_base::trunc|std::ios_base::out),
-        mHeight(0),
+    :mHeight(0),
         mAngle(0),
         mSource(Left)
 {
-    //std::string path = (boost::filesystem::current_path()).string() + "/../Resources/";
-    std::string path = "/Users/coffey/Library/Audio/Plug-Ins/Components/binaural.component/Contents/Resources/";
-    
-    std::string filename_format = "H%de%03da.wav";
+    std::string path = Utils::getResourcePath();
+    Utils::getLogger() << path << std::endl;
+    std::string filename_format = "/H%de%03da.wav";
     
     for (int elev_i = 0 ; elev_i < 14 ; ++elev_i) {
         int elev = (elev_i - 4) * 10;
