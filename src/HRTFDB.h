@@ -7,13 +7,16 @@
 
 #include "HRTF.h"
 
+using namespace boost;
+using namespace container;
+
 class HRTFDB : public HRTF {
 public:
     HRTFDB(const std::string& status_id, const std::string& status);
     
 private:
-    const boost::container::vector<std::pair<float, float> >& getHRTF(float elevation, float angle, bool& swap) const;
+    const std::pair<vector<float>, vector<float> >& getHRTF(float elevation, float angle, bool& swap) const;
     
 private:
-    boost::container::vector<boost::container::vector<std::pair<float, float> > > mAllHRTFs;
+    vector<std::pair<vector<float>, vector<float> > > mAllHRTFs;
 };

@@ -6,13 +6,17 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/math/special_functions/round.hpp>
+#include <boost/range/const_iterator.hpp>
+
+#include <Accelerate/Accelerate.h>
 
 #include "Fir.h"
 #include "Utils.h"
 #include "Diffuse.h"
 #include "HRTFDB.h"
 
-#define PAST_INPUT_MAX_SIZE 4096
+using namespace boost;
+using namespace container;
 
 Fir::Fir(Channel inputChannel)
     :mInputChannel(inputChannel),
@@ -20,8 +24,8 @@ Fir::Fir(Channel inputChannel)
         mElevation(ParamElevationDefaultValue),
         mAngle(ParamAngleDefaultValue)
 {
-    mHRTF = new Diffuse();
-    //mHRTF = new HRTFDB("1002", "C");
+    //mHRTF = new Diffuse();
+    mHRTF = new HRTFDB("1002", "C");
 }
 
 Fir::~Fir() {
@@ -42,12 +46,17 @@ void Fir::process(float inLeft, float inRight,
     }
     
     bool swap;
-    const boost::container::vector<std::pair<float, float> >& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
+    const std::pair<vector<float>, vector<float> >& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
+
+    const int stride = 1;
+    int elementsToProcess = std::min(mInputBuffer.size(), hrtf.first.size());
     
-    for (int i = 0 ; i < mInputBuffer.size() && i < hrtf.size() ; ++i) {
-        outLeft += mInputBuffer[i] * (swap ? hrtf[i].second : hrtf[i].first);
-        outRight += mInputBuffer[i] * (swap ? hrtf[i].first : hrtf[i].second);
-    }
+    const float* input = mInputBuffer.linearize();
+    
+    vDSP_vmul(hrtf.first.data(), stride, input, stride, mOutputBuffer, stride, elementsToProcess);
+    vDSP_sve(mOutputBuffer, stride, swap ? &outRight : &outLeft, elementsToProcess);
+    vDSP_vmul(hrtf.second.data(), stride, input, stride, mOutputBuffer, stride, elementsToProcess);
+    vDSP_sve(mOutputBuffer, stride, swap ? &outLeft : &outRight, elementsToProcess);
 }
 
 float Fir::getElevation() const {

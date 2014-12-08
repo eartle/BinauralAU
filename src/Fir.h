@@ -4,11 +4,13 @@
 
 #pragma once
 
-#include <boost/container/vector.hpp>
+#include <boost/container/deque.hpp>
 #include <boost/circular_buffer.hpp>
 
 static const float ParamAngleDefaultValue = 0.0f;
 static const float ParamElevationDefaultValue = 0.0f;
+
+#define PAST_INPUT_MAX_SIZE 4096
 
 class Fir {
 public:
@@ -33,10 +35,12 @@ public:
 
 private:
     Channel mInputChannel;
-	boost::circular_buffer<float> mInputBuffer;
+    boost::circular_buffer<float> mInputBuffer;
 
 	float mElevation;
 	float mAngle;
     
     class HRTF* mHRTF;
+
+    float mOutputBuffer[PAST_INPUT_MAX_SIZE];
 };
