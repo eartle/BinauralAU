@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include <boost/container/deque.hpp>
-#include <boost/circular_buffer.hpp>
+#include "InputBuffer.h"
 
 static const float ParamAngleDefaultValue = 0.0f;
 static const float ParamElevationDefaultValue = 0.0f;
@@ -35,7 +34,7 @@ public:
 
 private:
     Channel mInputChannel;
-    boost::circular_buffer<float> mInputBuffer;
+    InputBuffer<float> mInputBuffer;
 
 	float mElevation;
 	float mAngle;

@@ -1,6 +1,7 @@
 
 #include <string>
 #include <math.h>
+#include <algorithm>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -18,14 +19,17 @@
 using namespace boost;
 using namespace container;
 
+// At 44,100Khz should last about 1.5 seconds before a memcpy
+#define INPUT_BUFFER_TOTAL_SIZE 0x10000
+
 Fir::Fir(Channel inputChannel)
     :mInputChannel(inputChannel),
-        mInputBuffer(PAST_INPUT_MAX_SIZE),
+        mInputBuffer(INPUT_BUFFER_TOTAL_SIZE, PAST_INPUT_MAX_SIZE),
         mElevation(ParamElevationDefaultValue),
         mAngle(ParamAngleDefaultValue)
 {
-    //mHRTF = new Diffuse();
-    mHRTF = new HRTFDB("1002", "C");
+    mHRTF = new Diffuse();
+    //mHRTF = new HRTFDB("1002", "C");
 }
 
 Fir::~Fir() {
@@ -48,15 +52,15 @@ void Fir::process(float inLeft, float inRight,
     bool swap;
     const std::pair<vector<float>, vector<float> >& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
 
-    const int stride = 1;
-    int elementsToProcess = std::min(mInputBuffer.size(), hrtf.first.size());
+    int n = std::min(mInputBuffer.size(), hrtf.first.size());
+    const float* input = mInputBuffer.data();
     
-    const float* input = mInputBuffer.linearize();
+    // multiply two vectors and then add the results together
+    vDSP_vmul(hrtf.first.data(), 1, input, 1, mOutputBuffer, 1, n);
+    vDSP_sve(mOutputBuffer, 1, swap ? &outRight : &outLeft, n);
     
-    vDSP_vmul(hrtf.first.data(), stride, input, stride, mOutputBuffer, stride, elementsToProcess);
-    vDSP_sve(mOutputBuffer, stride, swap ? &outRight : &outLeft, elementsToProcess);
-    vDSP_vmul(hrtf.second.data(), stride, input, stride, mOutputBuffer, stride, elementsToProcess);
-    vDSP_sve(mOutputBuffer, stride, swap ? &outLeft : &outRight, elementsToProcess);
+    vDSP_vmul(hrtf.second.data(), 1, input, 1, mOutputBuffer, 1, n);
+    vDSP_sve(mOutputBuffer, 1, swap ? &outLeft : &outRight, n);
 }
 
 float Fir::getElevation() const {
