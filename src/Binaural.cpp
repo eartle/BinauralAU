@@ -34,16 +34,8 @@ ComponentResult Binaural::Version() {
     return kBinauralVersion;
 }
 
-bool Binaural::SupportsTail() {
-    return false;
-}
-
 bool Binaural::StreamFormatWritable(AudioUnitScope scope, AudioUnitElement element) {
     return IsInitialized() ? false : true;
-}
-
-ComponentResult Binaural::GetParameterValueStrings(AudioUnitScope inScope, AudioUnitParameterID inParameterID, CFArrayRef* outStrings) {  
-    return kAudioUnitErr_InvalidProperty;
 }
 
 ComponentResult Binaural::GetParameterInfo(AudioUnitScope inScope, AudioUnitParameterID inParameterID, AudioUnitParameterInfo &outParameterInfo) {
@@ -79,17 +71,9 @@ ComponentResult Binaural::GetParameterInfo(AudioUnitScope inScope, AudioUnitPara
     return result;
 }
 
-ComponentResult Binaural::GetPropertyInfo(AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, UInt32& outDataSize, Boolean& outWritable) {
-    return AUEffectBase::GetPropertyInfo(inID, inScope, inElement, outDataSize, outWritable);
-}
-
-ComponentResult Binaural::GetProperty(AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, void* outData) {
-    return AUEffectBase::GetProperty(inID, inScope, inElement, outData);
-}
-
 UInt32 Binaural::SupportedNumChannels(const AUChannelInfo** outInfo) {
     // set an array of arrays of different combinations of supported numbers of ins and outs
-    static const AUChannelInfo sChannels[1] = {{ 2, 2}};
+    static const AUChannelInfo sChannels[] = {{1, 2}, {2, 2}};
     if (outInfo)
         *outInfo = sChannels;
     return sizeof(sChannels) / sizeof(AUChannelInfo);
@@ -99,11 +83,11 @@ OSStatus Binaural::ProcessBufferLists(AudioUnitRenderActionFlags& inActionFlags,
                                         const AudioBufferList& inBuffer,
                                         AudioBufferList& outBuffer,
                                         UInt32 inFrames) {
-    mFirFilter.setAngle(Globals()->GetParameter(PARAM_ANGLE));
-    mFirFilter.setElevation(Globals()->GetParameter(PARAM_ELEVATION));
+    mFirFilter.setAngle(GetParameter(PARAM_ANGLE));
+    mFirFilter.setElevation(GetParameter(PARAM_ELEVATION));
     
     const Float32* srcBufferL = (Float32 *)inBuffer.mBuffers[0].mData;
-    const Float32* srcBufferR = (Float32 *)inBuffer.mBuffers[1].mData;
+    const Float32* srcBufferR = (Float32 *)inBuffer.mBuffers[(GetNumberOfChannels() == 1) ? 0 : 1].mData;
     
     Float32* destBufferL = (Float32 *)outBuffer.mBuffers[0].mData;
     Float32* destBufferR = (Float32 *)outBuffer.mBuffers[1].mData;

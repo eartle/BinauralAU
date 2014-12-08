@@ -45,8 +45,6 @@ void Fir::process(float inLeft, float inRight,
     const boost::container::vector<std::pair<float, float> >& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
     
     for (int i = 0 ; i < mInputBuffer.size() && i < hrtf.size() ; ++i) {
-        // the samples are interleaved (left is every other starting at 0)
-        //                             (right is every other starting at 1)
         outLeft += mInputBuffer[i] * (swap ? hrtf[i].second : hrtf[i].first);
         outRight += mInputBuffer[i] * (swap ? hrtf[i].first : hrtf[i].second);
     }
