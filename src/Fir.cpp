@@ -42,14 +42,13 @@ void Fir::process(float inLeft, float inRight,
     }
     
     bool swap;
-    const boost::container::vector<float>& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
+    const boost::container::vector<std::pair<float, float> >& hrtf = mHRTF->getHRTF(getElevation(), getAngle(), swap);
     
-    // The science bit: a discrete convolution the output is the
-    for (int i = 0 ; (i < (hrtf.size() / 2)) && (i < mInputBuffer.size()) ; ++i) {
+    for (int i = 0 ; i < mInputBuffer.size() && i < hrtf.size() ; ++i) {
         // the samples are interleaved (left is every other starting at 0)
         //                             (right is every other starting at 1)
-        outLeft += mInputBuffer[i] * hrtf[i * 2];
-        outRight += mInputBuffer[i] * hrtf[(i + 1) * 2];
+        outLeft += mInputBuffer[i] * hrtf[i].first;
+        outRight += mInputBuffer[i] * hrtf[i].second;
     }
 }
 

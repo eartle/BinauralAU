@@ -10,10 +10,10 @@ public:
     Diffuse();
     
 private:
-    const boost::container::vector<float>& getHRTF(float elevation, float angle, bool& swap) const;
+    const boost::container::vector<std::pair<float, float> >& getHRTF(float elevation, float angle, bool& swap) const;
     int getElevationIndex(float elevation) const;
     int getAngleIndex(float elevation, float angle) const;
     
 private:
-    boost::container::vector<boost::container::vector<float> > mHRTFs[14];
+    boost::container::vector<boost::container::vector<std::pair<float, float> > > mHRTFs[14];
 };

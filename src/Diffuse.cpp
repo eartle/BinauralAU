@@ -20,7 +20,7 @@ Diffuse::Diffuse() {
             // try finding a file for every angle
             std::string filename = path + (boost::format(filename_format) % elevation % angle).str();
             if (boost::filesystem::exists(filename)) {
-                boost::container::vector<float> angle_samples;
+                boost::container::vector<std::pair<float, float> > angle_samples;
                 readFile(filename, angle_samples);
                 mHRTFs[elev_index].push_back(angle_samples);
             }
@@ -30,7 +30,7 @@ Diffuse::Diffuse() {
     }
 }
 
-const boost::container::vector<float>& Diffuse::getHRTF(float elevation, float angle, bool& swap) const {
+const boost::container::vector<std::pair<float, float> >& Diffuse::getHRTF(float elevation, float angle, bool& swap) const {
     swap = angle > 180.0f;
     return mHRTFs[getElevationIndex(elevation)][getAngleIndex(elevation, angle)];
 }
