@@ -20,8 +20,8 @@ Fir::Fir(Channel inputChannel)
         mElevation(ParamElevationDefaultValue),
         mAngle(ParamAngleDefaultValue)
 {
-    //mHRTF = new Diffuse();
-    mHRTF = new HRTFDB("1002", "C");
+    mHRTF = new Diffuse();
+    //mHRTF = new HRTFDB("1002", "C");
 }
 
 Fir::~Fir() {
@@ -47,8 +47,8 @@ void Fir::process(float inLeft, float inRight,
     for (int i = 0 ; i < mInputBuffer.size() && i < hrtf.size() ; ++i) {
         // the samples are interleaved (left is every other starting at 0)
         //                             (right is every other starting at 1)
-        outLeft += mInputBuffer[i] * hrtf[i].first;
-        outRight += mInputBuffer[i] * hrtf[i].second;
+        outLeft += mInputBuffer[i] * (swap ? hrtf[i].second : hrtf[i].first);
+        outRight += mInputBuffer[i] * (swap ? hrtf[i].first : hrtf[i].second);
     }
 }
 
