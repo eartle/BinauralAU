@@ -1,17 +1,20 @@
+# Binaural
 
 This is a Mac OS X Audio Unit Effect plug-in.
 
 It's an effect to create a 3D sound in your headphones by doing a discrete convolution (FIR (finite impulse response) filter) with the input and a HRTF (head related transfer function). 
 
-A brief explanation from my understanding: an impulse is played from a speaker and recorded with stereo speakers inside a prostetic head. This is the HRTF. When you perform a discrete convolution with this and the input signal for each ear you apply back the characteristics of sound coming from the speaker source. So a mono input signal can be split into a stereo signal and when played through headphones the listener will hear the input signal appear to originate from the location of the speaker around the prosphetic head. If you take HRTFs from many positions around the prosphetic head you can then make sound appear to originate from all of those sound sources allowing you to place a sound anywhere in 3D.
+## A brief explanation (from my understanding)
 
-Dependencies
+An impulse is played from a speaker and recorded with stereo speakers inside a prostetic head. This is the HRTF. When you perform a discrete convolution with this and the input signal for each ear you apply back the characteristics of sound coming from the speaker source. So a mono input signal can be split into a stereo signal and when played through headphones the listener will hear the input signal appear to originate from the location of the speaker around the prosphetic head. If you take HRTFs from many positions around the prosphetic head you can then make sound appear to originate from all of those sound sources allowing you to place a sound anywhere in 3D.
+
+# Dependencies
 
 This project uses libsndfile to read the HRTFs which are .wav files. I've made a build without ogg, vorbis, or flac dependencies, but you can install through homebrew if that works for you.
 
 `brew install libsndfile`
 
-Building
+# Building
 
 This project is built using cmake. The .gitignore is setup so that it ignores directories starting with _ so start your cmake build directory should start with that.
 
