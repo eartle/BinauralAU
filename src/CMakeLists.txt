@@ -14,6 +14,7 @@ ADD_LIBRARY(Binaural MODULE
     Diffuse.h
     HRTFDB.cpp
     HRTFDB.h
+    InputBuffer.h
     Utils.m
     Utils.h
     ${DIFFUSE_WAV_FILES}
